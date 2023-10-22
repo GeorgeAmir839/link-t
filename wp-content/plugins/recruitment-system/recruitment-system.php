@@ -187,11 +187,11 @@ function da_job_add_callback()
         </p>
         <p>
             <label>Start date</label>
-            <input type="date" name="start_date"  min="<?php echo date('Y-m-d'); ?>" required>
+            <input type="date" name="start_date" min="<?php echo date('Y-m-d'); ?>" required>
         </p>
         <p>
             <label>End date</label>
-            <input type="date" name="end_date" min="<?php echo date('Y-m-d'); ?>"  required>
+            <input type="date" name="end_date" min="<?php echo date('Y-m-d'); ?>" required>
         </p>
         <p>
             <button type="submit" name="submit">Submit</button>
@@ -222,7 +222,7 @@ function da_jobs_list_callback()
     $table_name = $wpdb->prefix . 'jobs';
     $job_count = get_option('job_titles_count', 5);
     $job_list = $wpdb->get_results(
-        $wpdb->prepare("SELECT * FROM $table_name LIMIT %d", $job_count),
+        $wpdb->prepare("SELECT * FROM $table_name WHERE end_date > CURDATE() LIMIT %d", $job_count),
         ARRAY_A
     );
     if (count($job_list) > 0) {
