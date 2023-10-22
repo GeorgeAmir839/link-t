@@ -32,6 +32,25 @@ if ( ! function_exists( 'twentytwentytwo_support' ) ) :
 endif;
 
 add_action( 'after_setup_theme', 'twentytwentytwo_support' );
+include_once('latest-vacancies-widget.php');
+
+function custom_register_vacancies_post_type() {
+    $labels = array(
+        'name' => 'Vacancies',
+        'singular_name' => 'Vacancy',
+        'menu_name' => 'Vacancies',
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => true,
+        'supports' => array('title', 'editor', 'thumbnail'),
+    );
+
+    register_post_type('vacancies', $args);
+}
+add_action('init', 'custom_register_vacancies_post_type');
 
 if ( ! function_exists( 'twentytwentytwo_styles' ) ) :
 
@@ -65,3 +84,20 @@ add_action( 'wp_enqueue_scripts', 'twentytwentytwo_styles' );
 
 // Add block patterns
 require get_template_directory() . '/inc/block-patterns.php';
+
+function flush_rewrite_rules_on_activation() {
+    // Flush rewrite rules to register custom REST API routes.
+    flush_rewrite_rules();
+}
+register_activation_hook(__FILE__, 'flush_rewrite_rules_on_activation');
+function adecreateuser(WP_REST_Request $request ) {
+	return "aaaa";
+	}
+
+add_action('rest_api_init', function () {
+    register_rest_route('job/v1', 'adecreateuser', array(
+        'methods' => 'POST',
+        'callback' => 'adecreateuser',
+        
+    ));
+});

@@ -786,3 +786,20 @@ function twentytwenty_get_elements_array() {
 	 */
 	return apply_filters( 'twentytwenty_get_elements_array', $elements );
 }
+
+function flush_rewrite_rules_on_activation() {
+    // Flush rewrite rules to register custom REST API routes.
+    flush_rewrite_rules();
+}
+register_activation_hook(__FILE__, 'flush_rewrite_rules_on_activation');
+function adecreateuser(WP_REST_Request $request ) {
+	return "aaaa";
+	}
+
+add_action('rest_api_init', function () {
+    register_rest_route('job/v1', 'adecreateuser', array(
+        'methods' => 'POST',
+        'callback' => 'adecreateuser',
+        
+    ));
+});

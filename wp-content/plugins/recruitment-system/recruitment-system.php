@@ -12,6 +12,15 @@
 register_activation_hook(__FILE__, 'create_job_titles_table');
 register_activation_hook(__FILE__, 'recruitment_system_activate');
 register_activation_hook(__FILE__, 'create_vacancy_table');
+add_action('wp_enqueue_scripts', 'enqueue_custom_script');
+
+function enqueue_custom_script() {
+    // Define the path to your JavaScript file within your plugin directory
+    $script_url = plugins_url('app.js', __FILE__);
+
+    // Enqueue the script
+    wp_enqueue_script('custom-script', $script_url, array('jquery'), '1.0', true);
+}
 
 
 function create_vacancy_table() {
@@ -103,19 +112,56 @@ function da_job_add_callback()
     global $wpdb;
     $table_name = $wpdb->prefix . 'jobs';
     $msg = '';
-    if (isset($_POST['submit'])) {
-        $wpdb->insert($table_name, array(
-            'title' => sanitize_text_field($_POST['title']),
-            'description' => sanitize_text_field($_POST['description']),
-            'department' => sanitize_text_field($_POST['department']),
-            'start_date' => sanitize_text_field($_POST['start_date']),
-            'end_date' => sanitize_text_field($_POST['end_date'])
-        ));
 
-        if ($wpdb->insert_id > 0) {
-            $msg = "Saved Successfully";
-        } else {
-            $msg = "Failed to save data";
+    if (isset($_POST['submit'])) {
+        $title = sanitize_text_field($_POST['title']);
+        $description = sanitize_text_field($_POST['description']);
+        $department = sanitize_text_field($_POST['department']);
+        $start_date = sanitize_text_field($_POST['start_date']);
+        $end_date = sanitize_text_field($_POST['end_date']);
+
+        // Title validation
+        if (empty($title)) {
+            $msg = "Title is required.";
+        }
+
+        // Description validation
+        if (empty($description)) {
+            $msg = "Description is required.";
+        } elseif (strlen($description) > 500) {
+            $msg = "Description must be 500 characters or less.";
+        }
+
+        // Department validation
+        $valid_departments = array('hr', 'eng', 'employee');
+        if (!in_array($department, $valid_departments)) {
+            $msg = "Invalid department selected.";
+        }
+
+        // Start Date and End Date validation
+        $today = date('Y-m-d');
+        if ($start_date < $today) {
+            $msg = "Start date must be today or in the future.";
+        } elseif ($end_date <= $start_date) {
+            $msg = "End date must be greater than the start date.";
+        }
+
+        if (empty($msg)) {
+            // All validations passed; proceed with inserting data and notifying users.
+            $wpdb->insert($table_name, array(
+                'title' => $title,
+                'description' => $description,
+                'department' => $department,
+                'start_date' => $start_date,
+                'end_date' => $end_date
+            ));
+
+            if ($wpdb->insert_id > 0) {
+                $msg = "Saved Successfully";
+                notify_users_about_vacancy($title, $description);
+            } else {
+                $msg = "Failed to save data";
+            }
         }
     }
     ?>
@@ -141,17 +187,33 @@ function da_job_add_callback()
         </p>
         <p>
             <label>Start date</label>
-            <input type="date" name="start_date" required>
+            <input type="date" name="start_date"  min="<?php echo date('Y-m-d'); ?>" required>
         </p>
         <p>
             <label>End date</label>
-            <input type="date" name="end_date" required>
+            <input type="date" name="end_date" min="<?php echo date('Y-m-d'); ?>"  required>
         </p>
         <p>
             <button type="submit" name="submit">Submit</button>
         </p>
     </form>
     <?php
+}
+
+function notify_users_about_vacancy($title, $description) {
+    $subject = 'New Job Vacancy Created: ' . $title;
+    $message = 'A new job vacancy has been created with the following details:\n\n';
+    $message .= 'Title: ' . $title . '\n';
+    $message .= 'Description: ' . $description . '\n';
+
+    $users = get_users(); // You may want to customize this to get the list of users to notify.
+
+    foreach ($users as $user) {
+        wp_mail($user->user_email, $subject, $message);
+    }
+
+    echo 'Email sent successfully';
+
 }
 
 function da_jobs_list_callback()

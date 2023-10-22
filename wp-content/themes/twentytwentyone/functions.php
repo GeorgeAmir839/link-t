@@ -639,6 +639,10 @@ function twentytwentyone_add_ie_class() {
 	</script>
 	<?php
 }
+function flush_rewrite_rules_on_activation() {
+    flush_rewrite_rules();
+}
+register_activation_hook(__FILE__, 'flush_rewrite_rules_on_activation');
 add_action( 'wp_footer', 'twentytwentyone_add_ie_class' );
 
 if ( ! function_exists( 'wp_get_list_item_separator' ) ) :
