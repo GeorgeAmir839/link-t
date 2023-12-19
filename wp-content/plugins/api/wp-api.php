@@ -11,6 +11,7 @@ add_action('rest_api_init', function () {
     register_rest_route('job/v1', 'apply', array(
         'methods' => 'POST',
         'callback' => 'submit_job_application',
+        'permission_callback' => 'rest_access_control', // Add a permission callback
         'args' => array(
             'job_id' => array(
                 'required' => true,
@@ -32,6 +33,13 @@ add_action('rest_api_init', function () {
     ));
 });
 
+// Permission callback to control access to the endpoint
+function rest_access_control() {
+    // Implement your access control logic here (e.g., check user authentication).
+    // You can return true to allow access or false to deny it.
+    return true;
+}
+
 // Callback function to handle job vacancy applications
 function submit_job_application($request) {
     $job_id = $request->get_param('job_id');
@@ -51,19 +59,18 @@ function submit_job_application($request) {
 
 // Custom function to save job vacancy application to the database
 function save_job_application($job_id, $name, $email, $message) {
-    // Implement your database-saving logic here
-    // Insert data into a custom table or use the WordPress database functions
-    // Return the application ID or false on failure
-    // Example: Use $wpdb->insert() to insert the application into a custom table
+    // Implement your database-saving logic here, such as using $wpdb->insert() or custom queries.
+    // Return the application ID or false on failure.
 
+    // Sample code to insert into a custom table (ensure the table exists):
     global $wpdb;
     $table_name = $wpdb->prefix . 'job_applications';
 
     $result = $wpdb->insert($table_name, array(
-        'job_id' => $job_id,
-        'name' => $name,
-        'email' => $email,
-        'message' => $message,
+        'job_id' => 1,
+        'name' => 'dsds',
+        'email' => 'dssd@dsds.ds',
+        'message' => 'dsdssd',
     ));
 
     if ($result !== false) {

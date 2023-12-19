@@ -14,7 +14,8 @@ register_activation_hook(__FILE__, 'recruitment_system_activate');
 register_activation_hook(__FILE__, 'create_vacancy_table');
 add_action('wp_enqueue_scripts', 'enqueue_custom_script');
 
-function enqueue_custom_script() {
+function enqueue_custom_script()
+{
     // Define the path to your JavaScript file within your plugin directory
     $script_url = plugins_url('app.js', __FILE__);
 
@@ -23,21 +24,7 @@ function enqueue_custom_script() {
 }
 
 
-function create_vacancy_table() {
-    global $wpdb;
-    $charset_collate = $wpdb->get_charset_collate();
-    $table_name = $wpdb->prefix . 'my_custom_table';
-    $sql = "CREATE TABLE $table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        column1 varchar(255) NOT NULL,
-        column2 text,
-        column3 datetime,
-        PRIMARY KEY (id)
-    ) $charset_collate;";
 
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql);
-}
 function recruitment_system_activate()
 {
     global $wpdb;
@@ -85,7 +72,6 @@ function job_titles_menu()
     add_submenu_page(null, 'Delete Job', 'Delete Job', 'manage_options', 'delete-job', 'da_job_delete_call');
     add_submenu_page('job-list', 'Job List Shortcode', 'Job List Shortcode', 'edit_others_posts', 'job-shortcode', 'da_job_shortcode_call');
     add_submenu_page('job-list', 'Plugin Settings', 'Settings', 'manage_options', 'job-list-settings', 'job_titles_settings_page');
-
 }
 function job_titles_settings_page()
 {
@@ -95,7 +81,7 @@ function job_titles_settings_page()
         $job_count = intval($_POST['job_count']);
         update_option('job_titles_count', $job_count);
     }
-    ?>
+?>
     <div class="wrap">
         <h2>Recruitment System Settings</h2>
         <form method="post" action="">
@@ -105,7 +91,7 @@ function job_titles_settings_page()
             <p><input type="submit" name="submit" class="button button-primary" value="Save Changes"></p>
         </form>
     </div>
-    <?php
+<?php
 }
 function da_job_add_callback()
 {
@@ -164,7 +150,7 @@ function da_job_add_callback()
             }
         }
     }
-    ?>
+     ?>
 
     <h4 id="msg"><?php echo $msg; ?></h4>
 
@@ -200,7 +186,10 @@ function da_job_add_callback()
     <?php
 }
 
-function notify_users_about_vacancy($title, $description) {
+
+//send notification email for every user when create new Job Vacancy
+function notify_users_about_vacancy($title, $description)
+{
     $subject = 'New Job Vacancy Created: ' . $title;
     $message = 'A new job vacancy has been created with the following details:\n\n';
     $message .= 'Title: ' . $title . '\n';
@@ -213,7 +202,6 @@ function notify_users_about_vacancy($title, $description) {
     }
 
     echo 'Email sent successfully';
-
 }
 
 function da_jobs_list_callback()
@@ -271,15 +259,46 @@ function da_job_update_call()
     $id = isset($_GET['id']) ? intval($_GET['id']) : "";
 
     if (isset($_POST['update'])) {
-        if (!empty($id)) {
+        $title = sanitize_text_field($_POST['title']);
+        $description = sanitize_text_field($_POST['description']);
+        $department = sanitize_text_field($_POST['department']);
+        $start_date = sanitize_text_field($_POST['start_date']);
+        $end_date = sanitize_text_field($_POST['end_date']);
+
+        // Title validation
+        if (empty($title)) {
+            $msg = "Title is required.";
+        }
+
+        // Description validation
+        if (empty($description)) {
+            $msg = "Description is required.";
+        } elseif (strlen($description) > 500) {
+            $msg = "Description must be 500 characters or less.";
+        }
+
+        // Department validation
+        $valid_departments = array('hr', 'eng', 'employee');
+        if (!in_array($department, $valid_departments)) {
+            $msg = "Invalid department selected.";
+        }
+
+        // Start Date and End Date validation
+        $today = date('Y-m-d');
+        if ($start_date < $today) {
+            $msg = "Start date must be today or in the future.";
+        } elseif ($end_date <= $start_date) {
+            $msg = "End date must be greater than the start date.";
+        }
+        if (!empty($id) && empty($msg)) {
             $wpdb->update(
                 $table_name,
                 array(
-                    'title' => sanitize_text_field($_POST['title']),
-                    'description' => sanitize_text_field($_POST['description']),
-                    'department' => sanitize_text_field($_POST['department']),
-                    'start_date' => sanitize_text_field($_POST['start_date']),
-                    'end_date' => sanitize_text_field($_POST['end_date'])
+                    'title' => $title,
+                    'description' => $description,
+                    'department' => $department,
+                    'start_date' => $start_date,
+                    'end_date' => $end_date
                 ),
                 array('id' => $id)
             );
@@ -330,12 +349,13 @@ function da_job_delete_call()
         $confirmation = isset($_POST['conf']) ? sanitize_text_field($_POST['conf']) : 'no';
         if ($confirmation === 'yes') {
             $wpdb->delete($table_name, array('id' => $id));
-            ?>
+    
+        }
+        ?>
             <script>
                 location.href = "<?php echo admin_url('admin.php?page=job-list'); ?>";
             </script>
-            <?php
-        }
+    <?php
     }
     ?>
     <form method="post">
@@ -349,17 +369,17 @@ function da_job_delete_call()
         </p>
         <input type="hidden" name="id" value="<?php echo $id; ?>">
     </form>
-    <?php
+<?php
 }
 
 function da_job_shortcode_call()
 {
-    ?>
+?>
     <p>
         <label>Shortcode</label>
         <input type="text" value="[job_list]">
     </p>
-    <?php
+<?php
 }
 
 add_shortcode('job_list', 'da_jobs_list_callback');

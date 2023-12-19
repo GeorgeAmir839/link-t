@@ -26,6 +26,7 @@ class Latest_Vacancies_Widget extends WP_Widget {
             while ($vacancies->have_posts()) {
                 $vacancies->the_post();
                 echo '<li><a href="' . get_permalink() . '">' . get_the_title() . '</a></li>';
+                
             }
             echo '</ul>';
         } else {

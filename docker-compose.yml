@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: wp_dp
+      MYSQL_DATABASE: link_t
       MYSQL_USER: wp_user
       MYSQL_PASSWORD: 1234
     volumes:

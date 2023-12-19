@@ -3,27 +3,21 @@
 Template Name: Job Vacancie
 */
 get_header();
-?>
 
-<div id="primary" class="content-area">
-    <main id="main" class="site-main">
-        <?php
-        while (have_posts()) :
-            the_post();
-        ?>
-            <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
-                <header class="entry-header">
-                    <h1 class="entry-title"><?php the_title(); ?></h1>
-                </header>
+// Get the job ID from the URL
+$job_id = get_query_var('job_id');
 
-                <div class="entry-content">
-                    <?php the_content(); ?>
-                </div>
-            </article>
-        <?php endwhile; ?>
-    </main>
-</div>
+// Query your custom table to get the job details
+global $wpdb;
+$table_name = $wpdb->prefix . 'jobs'; // Replace 'jops' with your table name
+$job = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", 5));
 
-<?php
-get_sidebar();
+if ($job) {
+    echo '<h1>' . esc_html($job->title) . '</h1>';
+    echo '<p>' . esc_html($job->description) . '</p>';
+} else {
+    echo 'Job not found.';
+}
+
 get_footer();
+?>
